@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Account Signup</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+
+  <!-- Bootstrap Icons for password toggle -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+
+  <style>
+    :root {
+      --grad-1: #0f172a;
+      --grad-2: #1e293b;
+      --grad-3: #0ea5e9;
+      --grad-4: #a78bfa;
+      --grad-5: #22d3ee;
+    }
+    html, body { height: 100%; }
+    .app-bg {
+      position: fixed; inset: 0; z-index: 0;
+      background:
+        radial-gradient(1200px 800px at 10% 10%, color-mix(in oklab, var(--grad-3), transparent 60%) 0%, transparent 70%),
+        radial-gradient(900px 600px at 90% 20%, color-mix(in oklab, var(--grad-4), transparent 65%) 0%, transparent 70%),
+        radial-gradient(1000px 700px at 50% 90%, color-mix(in oklab, var(--grad-5), transparent 65%) 0%, transparent 70%),
+        linear-gradient(135deg, var(--grad-1), var(--grad-2));
+      animation: bg-pan 24s ease-in-out infinite alternate;
+      filter: saturate(110%) contrast(105%);
+    }
+    @keyframes bg-pan {
+      0%   { background-position: 0% 0%, 100% 0%, 50% 100%, 0% 0%; background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%; }
+      50%  { background-position: 20% 10%, 80% 10%, 40% 90%, 0% 0%; background-size: 110% 110%, 110% 110%, 110% 110%, 100% 100%; }
+      100% { background-position: 40% 20%, 60% 20%, 30% 80%, 0% 0%; background-size: 120% 120%, 120% 120%, 120% 120%, 100% 100%; }
+    }
+    .glass-card {
+      z-index: 1; background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(14px) saturate(120%);
+      -webkit-backdrop-filter: blur(14px) saturate(120%);
+      border-radius: 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+    .password-meter { height: 6px; }
+    .form-floating > label > .req { color: #dc3545; }
+    .input-group .form-floating { flex: 1 1 auto; }
+    .input-group .form-floating .form-control { border-right: 0; }
+    .input-group-text.bg-white { background-color: #fff !important; }
+    .has-validation .invalid-feedback, .has-validation .valid-feedback { display: block; }
+    .glass-card .form-control, .glass-card .form-select { background-color: rgba(255, 255, 255, 0.75); }
+    .glass-card .form-control:focus, .glass-card .form-select:focus { background-color: rgba(255, 255, 255, 0.9); }
+    .glass-card .btn-primary {
+      background: linear-gradient(90deg, var(--grad-3), var(--grad-4)); border: 0;
+    }
+    .glass-card .btn-primary:hover { filter: brightness(1.05); }
+  </style>
+</head>
+<body class="min-vh-100 d-flex align-items-center justify-content-center">
+  <div class="app-bg"></div>
+
+  <div class="container position-relative py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-7">
+        <div class="card shadow-lg border-0 glass-card">
+          <div class="card-body p-4">
+            <h1 class="h4 mb-4 text-white">Create Account</h1>
+
+            <div id="formStatus" class="visually-hidden" aria-live="polite"></div>
+
+            <form id="signupForm" class="needs-validation" novalidate>
+              <!-- Full name -->
+              <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="fullName" name="fullName"
+                  placeholder="Jane Doe" required minlength="2" />
+                <label for="fullName">Full name <span class="req">*</span></label>
+                <div class="invalid-feedback" id="fullNameError" aria-live="assertive">
+                  Enter a full name with at least 2 characters.
+                </div>
+              </div>
+
+              <!-- Email -->
+              <div class="form-floating mb-3">
+                <input type="email" class="form-control" id="email" name="email"
+                  placeholder="jane@example.com" required />
+                <label for="email">Email address <span class="req">*</span></label>
+                <div class="invalid-feedback" id="emailError" aria-live="assertive">
+                  Provide a valid email address.
+                </div>
+              </div>
+
+              <!-- Password + toggle -->
+              <div class="mb-3 has-validation">
+                <div class="input-group">
+                  <div class="form-floating">
+                    <input type="password" class="form-control" id="password" name="password"
+                      placeholder="Password" autocomplete="new-password" required />
+                    <label for="password">Password <span class="req">*</span></label>
+                  </div>
+                  <button class="input-group-text bg-white" type="button" id="togglePwd"
+                          aria-label="Toggle password visibility">
+                    <i class="bi bi-eye-slash" aria-hidden="true"></i>
+                  </button>
+                </div>
+                <div class="form-text mt-1" id="pwdHint">
+                  Use at least 8 characters with upper, lower, number, and a symbol.
+                </div>
+                <div class="progress mt-2" role="progressbar" aria-label="Password strength">
+                  <div id="passwordStrengthBar" class="progress-bar password-meter" style="width:0%"></div>
+                </div>
+                <div class="invalid-feedback" id="passwordError" aria-live="assertive">
+                  Password doesn’t meet strength requirements.
+                </div>
+              </div>
+
+              <!-- Confirm password -->
+              <div class="form-floating mb-3">
+                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword"
+                  placeholder="Confirm password" required autocomplete="new-password" />
+                <label for="confirmPassword">Confirm password <span class="req">*</span></label>
+                <div class="invalid-feedback" id="confirmError" aria-live="assertive">
+                  Passwords must match.
+                </div>
+              </div>
+
+              <!-- Country with datalist (prefix filter) -->
+              <div class="form-floating mb-3">
+                <input class="form-control" list="countryList" id="country" name="country"
+                  placeholder="Start typing a country..." required autocomplete="off" />
+                <label for="country">Country <span class="req">*</span></label>
+                <div class="invalid-feedback" id="countryError" aria-live="assertive">
+                  Select a valid country from the list.
+                </div>
+                <datalist id="countryList">
+                  <option value="Afghanistan"></option>
+                  <option value="Åland Islands"></option>
+                  <option value="Albania"></option>
+                  <option value="Algeria"></option>
+                  <option value="American Samoa"></option>
+                  <option value="Andorra"></option>
+                  <option value="Angola"></option>
+                  <option value="Anguilla"></option>
+                  <option value="Antarctica"></option>
+                  <option value="Antigua and Barbuda"></option>
+                  <option value="Argentina"></option>
+                  <option value="Armenia"></option>
+                  <option value="Aruba"></option>
+                  <option value="Australia"></option>
+                  <option value="Austria"></option>
+                  <option value="Azerbaijan"></option>
+                  <option value="Bahamas"></option>
+                  <option value="Bahrain"></option>
+                  <option value="Bangladesh"></option>
+                  <option value="Barbados"></option>
+                  <option value="Belarus"></option>
+                  <option value="Belgium"></option>
+                  <option value="Belize"></option>
+                  <option value="Benin"></option>
+                  <option value="Bermuda"></option>
+                  <option value="Bhutan"></option>
+                  <option value="Bolivia (Plurinational State of)"></option>
+                  <option value="Bonaire, Sint Eustatius and Saba"></option>
+                  <option value="Bosnia and Herzegovina"></option>
+                  <option value="Botswana"></option>
+                  <option value="Bouvet Island"></option>
+                  <option value="Brazil"></option>
+                  <option value="British Indian Ocean Territory"></option>
+                  <option value="Brunei Darussalam"></option>
+                  <option value="Bulgaria"></option>
+                  <option value="Burkina Faso"></option>
+                  <option value="Burundi"></option>
+                  <option value="Cabo Verde"></option>
+                  <option value="Cambodia"></option>
+                  <option value="Cameroon"></option>
+                  <option value="Canada"></option>
+                  <option value="Cayman Islands"></option>
+                  <option value="Central African Republic"></option>
+                  <option value="Chad"></option>
+                  <option value="Chile"></option>
+                  <option value="China"></option>
+                  <option value="Christmas Island"></option>
+                  <option value="Cocos (Keeling) Islands"></option>
+                  <option value="Colombia"></option>
+                  <option value="Comoros"></option>
+                  <option value="Congo"></option>
+                  <option value="Congo, Democratic Republic of the"></option>
+                  <option value="Cook Islands"></option>
+                  <option value="Costa Rica"></option>
+                  <option value="Côte d’Ivoire"></option>
+                  <option value="Croatia"></option>
+                  <option value="Cuba"></option>
+                  <option value="Curaçao"></option>
+                  <option value="Cyprus"></option>
+                  <option value="Czechia"></option>
+                  <option value="Denmark"></option>
+                  <option value="Djibouti"></option>
+                  <option value="Dominica"></option>
+                  <option value="Dominican Republic"></option>
+                  <option value="Ecuador"></option>
+                  <option value="Egypt"></option>
+                  <option value="El Salvador"></option>
+                  <option value="Equatorial Guinea"></option>
+                  <option value="Eritrea"></option>
+                  <option value="Estonia"></option>
+                  <option value="Eswatini"></option>
+                  <option value="Ethiopia"></option>
+                  <option value="Falkland Islands (Malvinas)"></option>
+                  <option value="Faroe Islands"></option>
+                  <option value="Fiji"></option>
+                  <option value="Finland"></option>
+                  <option value="France"></option>
+                  <option value="French Guiana"></option>
+                  <option value="French Polynesia"></option>
+                  <option value="French Southern Territories"></option>
+                  <option value="Gabon"></option>
+                  <option value="Gambia"></option>
+                  <option value="Georgia"></option>
+                  <option value="Germany"></option>
+                  <option value="Ghana"></option>
+                  <option value="Gibraltar"></option>
+                  <option value="Greece"></option>
+                  <option value="Greenland"></option>
+                  <option value="Grenada"></option>
+                  <option value="Guadeloupe"></option>
+                  <option value="Guam"></option>
+                  <option value="Guatemala"></option>
+                  <option value="Guernsey"></option>
+                  <option value="Guinea"></option>
+                  <option value="Guinea-Bissau"></option>
+                  <option value="Guyana"></option>
+                  <option value="Haiti"></option>
+                  <option value="Heard Island and McDonald Islands"></option>
+                  <option value="Holy See"></option>
+                  <option value="Honduras"></option>
+                  <option value="Hong Kong"></option>
+                  <option value="Hungary"></option>
+                  <option value="Iceland"></option>
+                  <option value="India"></option>
+                  <option value="Indonesia"></option>
+                  <option value="Iran (Islamic Republic of)"></option>
+                  <option value="Iraq"></option>
+                  <option value="Ireland"></option>
+                  <option value="Isle of Man"></option>
+                  <option value="Israel"></option>
+                  <option value="Italy"></option>
+                  <option value="Jamaica"></option>
+                  <option value="Japan"></option>
+                  <option value="Jersey"></option>
+                  <option value="Jordan"></option>
+                  <option value="Kazakhstan"></option>
+                  <option value="Kenya"></option>
+                  <option value="Kiribati"></option>
+                  <option value="Korea (Democratic People’s Republic of)"></option>
+                  <option value="Korea, Republic of"></option>
+                  <option value="Kuwait"></option>
+                  <option value="Kyrgyzstan"></option>
+                  <option value="Lao People’s Democratic Republic"></option>
+                  <option value="Latvia"></option>
+                  <option value="Lebanon"></option>
+                  <option value="Lesotho"></option>
+                  <option value="Liberia"></option>
+                  <option value="Libya"></option>
+                  <option value="Liechtenstein"></option>
+                  <option value="Lithuania"></option>
+                  <option value="Luxembourg"></option>
+                  <option value="Macao"></option>
+                  <option value="Madagascar"></option>
+                  <option value="Malawi"></option>
+                  <option value="Malaysia"></option>
+                  <option value="Maldives"></option>
+                  <option value="Mali"></option>
+                  <option value="Malta"></option>
+                  <option value="Marshall Islands"></option>
+                  <option value="Martinique"></option>
+                  <option value="Mauritania"></option>
+                  <option value="Mauritius"></option>
+                  <option value="Mayotte"></option>
+                  <option value="Mexico"></option>
+                  <option value="Micronesia (Federated States of)"></option>
+                  <option value="Moldova, Republic of"></option>
+                  <option value="Monaco"></option>
+                  <option value="Mongolia"></option>
+                  <option value="Montenegro"></option>
+                  <option value="Montserrat"></option>
+                  <option value="Morocco"></option>
+                  <option value="Mozambique"></option>
+                  <option value="Myanmar"></option>
+                  <option value="Namibia"></option>
+                  <option value="Nauru"></option>
+                  <option value="Nepal"></option>
+                  <option value="Netherlands"></option>
+                  <option value="New Caledonia"></option>
+                  <option value="New Zealand"></option>
+                  <option value="Nicaragua"></option>
+                  <option value="Niger"></option>
+                  <option value="Nigeria"></option>
+                  <option value="Niue"></option>
+                  <option value="Norfolk Island"></option>
+                  <option value="North Macedonia"></option>
+                  <option value="Northern Mariana Islands"></option>
+                  <option value="Norway"></option>
+                  <option value="Oman"></option>
+                  <option value="Pakistan"></option>
+                  <option value="Palau"></option>
+                  <option value="Palestine, State of"></option>
+                  <option value="Panama"></option>
+                  <option value="Papua New Guinea"></option>
+                  <option value="Paraguay"></option>
+                  <option value="Peru"></option>
+                  <option value="Philippines"></option>
+                  <option value="Pitcairn"></option>
+                  <option value="Poland"></option>
+                  <option value="Portugal"></option>
+                  <option value="Puerto Rico"></option>
+                  <option value="Qatar"></option>
+                  <option value="Réunion"></option>
+                  <option value="Romania"></option>
+                  <option value="Russian Federation"></option>
+                  <option value="Rwanda"></option>
+                  <option value="Saint Barthélemy"></option>
+                  <option value="Saint Helena, Ascension and Tristan da Cunha"></option>
+                  <option value="Saint Kitts and Nevis"></option>
+                  <option value="Saint Lucia"></option>
+                  <option value="Saint Martin (French part)"></option>
+                  <option value="Saint Pierre and Miquelon"></option>
+                  <option value="Saint Vincent and the Grenadines"></option>
+                  <option value="Samoa"></option>
+                  <option value="San Marino"></option>
+                  <option value="Sao Tome and Principe"></option>
+                  <option value="Saudi Arabia"></option>
+                  <option value="Senegal"></option>
+                  <option value="Serbia"></option>
+                  <option value="Seychelles"></option>
+                  <option value="Sierra Leone"></option>
+                  <option value="Singapore"></option>
+                  <option value="Sint Maarten (Dutch part)"></option>
+                  <option value="Slovakia"></option>
+                  <option value="Slovenia"></option>
+                  <option value="Solomon Islands"></option>
+                  <option value="Somalia"></option>
+                  <option value="South Africa"></option>
+                  <option value="South Georgia and the South Sandwich Islands"></option>
+                  <option value="South Sudan"></option>
+                  <option value="Spain"></option>
+                  <option value="Sri Lanka"></option>
+                  <option value="Sudan"></option>
+                  <option value="Suriname"></option>
+                  <option value="Svalbard and Jan Mayen"></option>
+                  <option value="Sweden"></option>
+                  <option value="Switzerland"></option>
+                  <option value="Syrian Arab Republic"></option>
+                  <option value="Taiwan, Province of China"></option>
+                  <option value="Tajikistan"></option>
+                  <option value="Tanzania, United Republic of"></option>
+                  <option value="Thailand"></option>
+                  <option value="Timor-Leste"></option>
+                  <option value="Togo"></option>
+                  <option value="Tokelau"></option>
+                  <option value="Tonga"></option>
+                  <option value="Trinidad and Tobago"></option>
+                  <option value="Tunisia"></option>
+                  <option value="Türkiye"></option>
+                  <option value="Turkmenistan"></option>
+                  <option value="Turks and Caicos Islands"></option>
+                  <option value="Tuvalu"></option>
+                  <option value="Uganda"></option>
+                  <option value="Ukraine"></option>
+                  <option value="United Arab Emirates"></option>
+                  <option value="United Kingdom of Great Britain and Northern Ireland"></option>
+                  <option value="United States of America"></option>
+                  <option value="Uruguay"></option>
+                  <option value="Uzbekistan"></option>
+                  <option value="Vanuatu"></option>
+                  <option value="Venezuela (Bolivarian Republic of)"></option>
+                  <option value="Viet Nam"></option>
+                  <option value="Virgin Islands (British)"></option>
+                  <option value="Virgin Islands (U.S.)"></option>
+                  <option value="Wallis and Futuna"></option>
+                  <option value="Western Sahara"></option>
+                  <option value="Yemen"></option>
+                  <option value="Zambia"></option>
+                  <option value="Zimbabwe"></option>
+                </datalist>
+              </div>
+
+              <!-- Marketing opt-in switch (optional) -->
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" role="switch" id="marketingOptIn" />
+                <label class="form-check-label text-white-50" for="marketingOptIn">
+                  Allow emails/phone updates about news and information
+                </label>
+              </div>
+
+              <!-- Terms + TOS link -->
+              <div class="d-flex align-items-start justify-content-between mb-3">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="terms" required />
+                  <label class="form-check-label text-white-50" for="terms">
+                    Agree to the Terms
+                  </label>
+                </div>
+                <a href="ts.html" class="link-offset-2 link-underline-light link-underline-opacity-50 text-white">
+                  View Terms of Service
+                </a>
+              </div>
+              <div class="invalid-feedback d-block" id="termsError" aria-live="assertive" style="display:none">
+                Agreement is required.
+              </div>
+
+              <div class="d-grid">
+                <button type="submit" class="btn btn-primary btn-lg">Create account</button>
+              </div>
+            </form>
+
+            <div id="successAlert" class="alert alert-success mt-4 d-none" role="alert" aria-live="polite">
+              Registration successful! This demo prevented actual submission.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <!-- Bootstrap Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[#?!@$%^&*\\-]).{8,}$/;
+    const COUNTRY_SET = new Set(Array.from(document.querySelectorAll('#countryList option')).map(o => o.value));
+
+    function updatePasswordMeter(value) {
+      const bar = document.getElementById('passwordStrengthBar');
+      let score = 0;
+      if (value.length >= 8) score++;
+      if (/[a-z]/.test(value)) score++;
+      if (/[A-Z]/.test(value)) score++;
+      if (/\\d/.test(value)) score++;
+      if (/[#?!@$%^&*\\-]/.test(value)) score++;
+
+      let width = 0, color = 'bg-danger', label = 'Weak';
+      if (score <= 2) { width = 25; color = 'bg-danger'; label = 'Weak'; }
+      else if (score === 3) { width = 50; color = 'bg-warning'; label = 'Fair'; }
+      else if (score === 4) { width = 75; color = 'bg-info'; label = 'Good'; }
+      else { width = 100; color = 'bg-success'; label = 'Strong'; }
+
+      bar.style.width = width + '%';
+      bar.className = 'progress-bar password-meter ' + color;
+      bar.setAttribute('aria-valuenow', width);
+      bar.setAttribute('aria-valuemin', '0');
+      bar.setAttribute('aria-valuemax', '100');
+      bar.setAttribute('aria-label', 'Password strength ' + label);
+    }
+
+    (function () {
+      'use strict';
+
+      const form = document.getElementById('signupForm');
+      const status = document.getElementById('formStatus');
+      const successAlert = document.getElementById('successAlert');
+
+      const pwd = document.getElementById('password');
+      const confirmPwd = document.getElementById('confirmPassword');
+      const terms = document.getElementById('terms');
+      const termsError = document.getElementById('termsError');
+
+      // Toggle password visibility
+      const toggleBtn = document.getElementById('togglePwd');
+      toggleBtn.addEventListener('click', () => {
+        const isText = pwd.type === 'text';
+        pwd.type = isText ? 'password' : 'text';
+        toggleBtn.innerHTML = isText ? '<i class="bi bi-eye-slash" aria-hidden="true"></i>' : '<i class="bi bi-eye" aria-hidden="true"></i>';
+        toggleBtn.setAttribute('aria-pressed', String(!isText));
+      });
+
+      // Live password validation + meter
+      const pwdError = document.getElementById('passwordError');
+      pwd.addEventListener('input', () => {
+        updatePasswordMeter(pwd.value);
+        if (strongPassword.test(pwd.value)) {
+          pwd.setCustomValidity('');
+          pwd.classList.remove('is-invalid');
+          pwd.classList.add('is-valid');
+        } else {
+          pwd.setCustomValidity('Weak password');
+          pwd.classList.remove('is-valid');
+          pwd.classList.add('is-invalid');
+          pwdError.textContent = 'At least 8 chars with upper, lower, number, and symbol.';
+        }
+        validateConfirm();
+      });
+
+      // Confirm password validation
+      const confirmError = document.getElementById('confirmError');
+      function validateConfirm() {
+        if (confirmPwd.value && confirmPwd.value !== pwd.value) {
+          confirmPwd.setCustomValidity('Mismatch');
+          confirmPwd.classList.remove('is-valid');
+          confirmPwd.classList.add('is-invalid');
+          confirmError.textContent = 'Passwords must match.';
+        } else {
+          confirmPwd.setCustomValidity('');
+          if (confirmPwd.value.length > 0) {
+            confirmPwd.classList.remove('is-invalid');
+            confirmPwd.classList.add('is-valid');
+          } else {
+            confirmPwd.classList.remove('is-valid');
+          }
+        }
+      }
+      confirmPwd.addEventListener('input', validateConfirm);
+
+      // Country validation: matches datalist option
+      const countryInput = document.getElementById('country');
+      const countryError = document.getElementById('countryError');
+      function validateCountry() {
+        const val = countryInput.value.trim();
+        if (COUNTRY_SET.has(val)) {
+          countryInput.setCustomValidity('');
+          countryInput.classList.remove('is-invalid');
+          countryInput.classList.add('is-valid');
+        } else {
+          countryInput.setCustomValidity('Invalid country');
+          countryInput.classList.remove('is-valid');
+          countryInput.classList.add('is-invalid');
+          countryError.textContent = 'Select a valid country from the list.';
+        }
+      }
+      countryInput.addEventListener('input', validateCountry);
+      countryInput.addEventListener('blur', validateCountry);
+
+      // Terms explicit validation message
+      terms.addEventListener('change', () => {
+        if (terms.checked) {
+          terms.setCustomValidity('');
+          termsError.style.display = 'none';
+        }
+      });
+
+      // Immediate feedback for other fields
+      $(form).find('input:not(#password):not(#confirmPassword):not(#country):not(#terms), select').on('blur change', function () {
+        if (this.checkValidity()) {
+          $(this).removeClass('is-invalid').addClass('is-valid');
+        } else {
+          $(this).removeClass('is-valid').addClass('is-invalid');
+        }
+      });
+
+      // Submit handler
+      form.addEventListener('submit', function (event) {
+        validateCountry();
+        validateConfirm();
+
+        if (!terms.checked) {
+          terms.setCustomValidity('You must agree to the terms');
+          termsError.style.display = 'block';
+          termsError.textContent = 'Agreement is required.';
+        } else {
+          terms.setCustomValidity('');
+          termsError.style.display = 'none';
+        }
+
+        if (!form.checkValidity()) {
+          event.preventDefault();
+          event.stopPropagation();
+          status.textContent = 'Please fix the errors in the form.';
+        } else {
+          event.preventDefault(); // demo only
+          const marketing = document.getElementById('marketingOptIn').checked;
+          successAlert.classList.remove('d-none');
+          status.textContent = 'Form submitted successfully. Marketing opt-in: ' + (marketing ? 'Yes' : 'No') + '.';
+          form.reset();
+          form.classList.remove('was-validated');
+          // Reset visuals
+          $('#signupForm .is-valid, #signupForm .is-invalid').removeClass('is-valid is-invalid');
+          updatePasswordMeter('');
+          document.getElementById('passwordStrengthBar').style.width = '0%';
+          document.getElementById('togglePwd').innerHTML = '<i class="bi bi-eye-slash" aria-hidden="true"></i>';
+          pwd.type = 'password';
+          termsError.style.display = 'none';
+        }
+        form.classList.add('was-validated');
+      }, false);
+    })();
+  </script>
+</body>
+</html>
